@@ -1,15 +1,15 @@
 "use client";
 
-import React, {useState} from "react";
-import {SquareData} from "@/model/SquareData";
+import React, { useState } from "react";
+import { SquareData } from "@/model/SquareData";
 import PaymentModal from "@/app/components/PaymentModal";
 
 interface SquareProps {
     data: SquareData;
-    squareSize: number;
+    squareSize: number; // Size of each square
 }
 
-export default function Square({data, squareSize}: SquareProps) {
+export default function Square({ data, squareSize }: SquareProps) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedSquareId, setSelectedSquareId] = useState<number | null>(null);
 
@@ -36,14 +36,31 @@ export default function Square({data, squareSize}: SquareProps) {
             <div
                 onClick={handleSquareClick}
                 style={{
-                    width: `${squareSize}px`, // Adjust size as needed
+                    width: `${squareSize}px`, // Set the square size
                     height: `${squareSize}px`,
-                    backgroundColor: data.isPurchased ? "transparent" : "grey",
-                    backgroundImage: data.isPurchased ? `url(${data.imageUrl})` : "none",
-                    backgroundSize: "cover",
+                    // backgroundColor: data.isPurchased ? "transparent" : "grey",
+                    backgroundColor: "grey",
+                    position: "relative",
+                    overflow: "hidden", // Hide overflow
                     cursor: "pointer",
                 }}
-            />
+            >
+                {data.isPurchased && (
+                    <img
+                        src={data.imageUrl}
+                        alt={data.title}
+                        style={{
+                            width: "100%", // Make image fill the square
+                            height: "100%",
+                            // objectFit: "cover", // Ensure the image covers the square without distortion
+                            objectFit: "contain", // Ensure the image is contained and not truncated
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                        }}
+                    />
+                )}
+            </div>
 
             {/* Payment Modal */}
             {isModalOpen && selectedSquareId !== null && (
