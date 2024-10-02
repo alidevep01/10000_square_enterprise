@@ -1,11 +1,12 @@
-import React, { useState } from "react";
+import React, {useState} from "react";
+import {MAX_FILE_SIZE} from "@/constants/constants";
 
 interface PaymentModalProps {
     squareId: number;
     onClose: () => void; // Callback to close the modal
 }
 
-const PaymentModal: React.FC<PaymentModalProps> = ({ squareId, onClose }) => {
+const PaymentModal: React.FC<PaymentModalProps> = ({squareId, onClose}) => {
     // State to hold user inputs for title, imageUrl, emailId, and redirectLink
     const [title, setTitle] = useState("");
     const [imageFile, setImageFile] = useState<File | null>(null);
@@ -32,7 +33,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ squareId, onClose }) => {
         return regex.test(url);
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         // Reset error messages
         const errors: string[] = [];
 
@@ -52,7 +53,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ squareId, onClose }) => {
         }
 
         // Check file size (4MB)
-        if (imageFile && imageFile.size > 4 * 1024 * 1024) {
+        if (imageFile && imageFile.size > MAX_FILE_SIZE) {
             errors.push("Image file size should not exceed 4MB."); // Show error for large files
         }
 
@@ -61,22 +62,46 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ squareId, onClose }) => {
             return;
         }
 
-        // Convert image file to base64 or upload it to a server/S3 here
+        // Convert image file to base64 and send to the API
         const reader = new FileReader();
-        reader.onloadend = () => {
+        reader.onloadend = async () => {
             const squareData = {
-                squareId,
+                id: squareId,  // Assuming squareId is the unique identifier
                 title,
                 imageUrl: reader.result, // Base64 image data
                 emailId,
                 redirectLink,
+                owner: emailId // Assuming the owner is the user who is purchasing the square
             };
-            console.log("Square Data Submitted: ", squareData);
-            // Close the modal after submitting the data
-            onClose();
+            console.log(squareData);
+
+            try {
+                const response = await fetch('/api/squareDataHandler', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(squareData), // Convert squareData to JSON
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to save square data');
+                }
+
+                console.log("Square Data Submitted Successfully!");
+                onClose(); // Close the modal after successfully submitting
+            } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : 'An error occurred while submitting square data.';
+                console.log(errorMessage);
+                setErrorMessages([errorMessage]); // Set error messages if there's an error
+            }
         };
-        reader.readAsDataURL(imageFile); // Convert to base64
+        if (imageFile) {
+            reader.readAsDataURL(imageFile); // Convert to base64
+        }
     };
+
 
     return (
         <div style={modalStyle}>
