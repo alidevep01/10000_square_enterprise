@@ -10,7 +10,6 @@ export default function Home() {
 
     return (
         <div>
-            {/* move the Square Showcase to middle of the page*/}
             <h1>Square Showcase</h1>
             {/* Render the Grid with the specified count */}
             <Grid count={squareCount} squareSize={squareSize} gap={gap}/>

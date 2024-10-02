@@ -1,5 +1,3 @@
-// src/app/components/PaymentModal.tsx
-
 import React, {useState} from "react";
 
 interface PaymentModalProps {
@@ -8,20 +6,34 @@ interface PaymentModalProps {
 }
 
 const PaymentModal: React.FC<PaymentModalProps> = ({squareId, onClose}) => {
-    // State to hold user inputs for title, imageUrl, and redirectLink
+    // State to hold user inputs for title, imageUrl, redirectLink, and email
     const [title, setTitle] = useState("");
     const [imageUrl, setImageUrl] = useState("");
     const [redirectLink, setRedirectLink] = useState("");
+    const [emailId, setEmailId] = useState("");
+
+    const [error, setError] = useState(""); // State to hold validation error message
 
     const handleSubmit = () => {
+        // Validate that all fields are filled
+        if (!title || !imageUrl || !redirectLink || !emailId) {
+            setError("All fields are mandatory!");
+            return;
+        }
+
         // You can handle the form submission here, e.g., send the data to a server or update the square
         const squareData = {
             squareId,
             title,
             imageUrl,
             redirectLink,
+            emailId,
         };
         console.log("Square Data Submitted: ", squareData);
+
+        // Reset the error message
+        setError("");
+
         // Close the modal after submitting the data
         onClose();
     };
@@ -31,6 +43,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({squareId, onClose}) => {
             <h2>Purchase Square {squareId}</h2>
 
             <div style={formStyle}>
+                {error && <p style={errorStyle}>{error}</p>} {/* Display error if any */}
+
                 <label style={labelStyle}>
                     Title:
                     <input
@@ -38,6 +52,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({squareId, onClose}) => {
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                         style={inputStyle}
+                        required
                     />
                 </label>
 
@@ -48,6 +63,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({squareId, onClose}) => {
                         value={imageUrl}
                         onChange={(e) => setImageUrl(e.target.value)}
                         style={inputStyle}
+                        required
                     />
                 </label>
 
@@ -58,6 +74,18 @@ const PaymentModal: React.FC<PaymentModalProps> = ({squareId, onClose}) => {
                         value={redirectLink}
                         onChange={(e) => setRedirectLink(e.target.value)}
                         style={inputStyle}
+                        required
+                    />
+                </label>
+
+                <label style={labelStyle}>
+                    Email ID:
+                    <input
+                        type="email"
+                        value={emailId}
+                        onChange={(e) => setEmailId(e.target.value)}
+                        style={inputStyle}
+                        required
                     />
                 </label>
 
@@ -118,6 +146,11 @@ const buttonStyle = {
     backgroundColor: "#007bff",
     color: "#fff",
     cursor: "pointer",
+};
+
+const errorStyle = {
+    color: "red",
+    marginBottom: "10px",
 };
 
 export default PaymentModal;

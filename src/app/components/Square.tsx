@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { SquareData } from "@/model/SquareData";
+import React, {useState} from "react";
+import {SquareData} from "@/model/SquareData";
 import PaymentModal from "@/app/components/PaymentModal";
 
 interface SquareProps {
@@ -9,11 +9,12 @@ interface SquareProps {
     squareSize: number; // Size of each square
 }
 
-export default function Square({ data, squareSize }: SquareProps) {
+export default function Square({data, squareSize}: SquareProps) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedSquareId, setSelectedSquareId] = useState<number | null>(null);
 
     const handleSquareClick = () => {
+        console.log("Square clicked:", data.title);
         if (!data.isPurchased) {
             openPaymentModal(data.id); // Open modal if square is not purchased
         } else {

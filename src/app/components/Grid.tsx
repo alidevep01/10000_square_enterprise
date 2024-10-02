@@ -18,7 +18,7 @@ export default function Grid({count, squareSize, gap}: GridProps) {
         imageUrl: "https://img.lovepik.com/free-png/20220124/lovepik-square-png-image_401707831_wh1200.png",
         redirectLink: "https://example.com",
         title: `Square ${index}`,
-        isPurchased: true,
+        isPurchased: false,
         description: "This is a square"
     }));
 
