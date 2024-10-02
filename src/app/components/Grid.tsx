@@ -56,8 +56,8 @@ export default function Grid({count, squareSize, gap}: GridProps) {
 
 const gridStyle = {
     display: "grid",
+    alignItems: "center",
     width: "100vw",
-    height: "100vh",
     padding: "0", // No padding
     boxSizing: "border-box" as const,
 };
