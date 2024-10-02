@@ -1,47 +1,9 @@
 import {NextResponse} from 'next/server';
-// import AWS from 'aws-sdk';
-import {SquareAPIData} from "@/model/SquareData";
+import {PrismaClient} from '@prisma/client';
+// import {S3params} from "@/model/squareData";
+// import {CLOUD_FAIR_R2_BUCKET_NAME} from "@/util/constants/constants";
 
-// Configure AWS S3
-// const s3 = new AWS.S3({
-//     endpoint: 'https://<your-region>.digitaloceanspaces.com', // Replace with your DigitalOcean Spaces endpoint
-//     accessKeyId: process.env.SPACES_ACCESS_KEY, // Your Spaces access key
-//     secretAccessKey: process.env.SPACES_SECRET_KEY, // Your Spaces secret key
-// });
-
-// Mock database for example purposes
-const mockDatabase: { [key: number]: SquareAPIData } = {
-    1: {
-        id: 1,
-        owner: 'sairamk0@gmail.com',
-        imageUrl: 'https://example.com/image1.jpg',
-        redirectLink: 'https://google.com'
-    },
-    2: {
-        id: 2,
-        owner: 'user1@example.com',
-        imageUrl: 'https://example.com/image2.jpg',
-        redirectLink: 'https://example.com'
-    },
-    3: {
-        id: 3,
-        owner: 'user2@example.com',
-        imageUrl: 'https://example.com/image3.jpg',
-        redirectLink: 'https://example.org'
-    },
-    4: {
-        id: 4,
-        owner: 'user3@example.com',
-        imageUrl: 'https://example.com/image4.jpg',
-        redirectLink: 'https://example.net'
-    },
-    5: {
-        id: 5,
-        owner: 'user4@example.com',
-        imageUrl: 'https://example.com/image5.jpg',
-        redirectLink: 'https://example.co'
-    },
-};
+const prisma = new PrismaClient();
 
 // Fetch squares based on a range of IDs
 export async function GET(request: Request) {
@@ -57,7 +19,21 @@ export async function GET(request: Request) {
     const start = parseInt(startParam, 10);
     const end = parseInt(endParam, 10);
 
-    const squares = await fetchSquaresFromDatabase(start, end);
+    const squares = await prisma.square.findMany({
+        where: {
+            id: {
+                gte: start,
+                lte: end,
+            },
+        },
+        select: {
+            id: true,
+            title: true,
+            imageUrl: true,
+            redirectLink: true,
+        },
+    });
+    // console.log(squares);
     return NextResponse.json(squares);
 }
 
@@ -68,19 +44,53 @@ export async function POST(request: Request) {
         const squareData = await request.json();
 
         // Validate required fields
-        const {id, title, imageUrl, emailId, redirectLink, owner} = squareData;
-        if (!id || !title || !imageUrl || !emailId || !redirectLink || !owner) {
+        const {id, title, imageUrl, redirectLink, owner} = squareData;
+        if (!id || !title || !imageUrl || !redirectLink || !owner) {
             return NextResponse.json({error: 'Required fields are absent'}, {status: 400});
         }
 
+        // Check if the square already exists in the database
+        const existingSquare = await prisma.square.findUnique({
+            where: {id}
+        });
+
         // Check if the square already exists
-        if (mockDatabase[id]) {
+        if (existingSquare) {
             return NextResponse.json({error: 'Square is already purchased, please try another one!'}, {status: 400});
         }
 
+        // Prepare the image data for uploading
+        // const [metaData, base64Image] = imageUrl.split(','); // Split into metadata and base64
+        // const buffer = Buffer.from(base64Image, 'base64');
+        //
+        // // Extract the content type from the metadata
+        // const contentTypeMatch = metaData.match(/data:(.*?);base64/);
+        // const contentType = contentTypeMatch ? contentTypeMatch[1] : 'image/png'; // Default to png if not found
+        //
+        // const fileExtension = contentType.split('/')[1]; // Get the extension after the slash
+        //
+        // // Upload the image file to S3
+        // const s3Params: S3params = {
+        //     Bucket: CLOUD_FAIR_R2_BUCKET_NAME, // Replace with your bucket name
+        //     Key: `squares/${id}.png`, // Specify the file name and path
+        //     Body: buffer,
+        //     ContentType: contentType, // Adjust based on your image type
+        // };
+
+        // await uploadFileToS3(s3Params);
 
         // Save the square data to the "database"
-        await saveSquareDataToDatabase(squareData);
+        // Save the new square data using Prisma
+        await prisma.square.create({
+            data: {
+                id,
+                title,
+                // imageUrl: `${CLOUD_FAIR_R2_BUCKET_URL}/squares/${id}.${fileExtension}`,
+                imageUrl: imageUrl,
+                redirectLink,
+                owner,
+            },
+        });
 
         // Return a success response
         return NextResponse.json({message: 'Square data submitted successfully'}, {status: 201});
@@ -91,30 +101,4 @@ export async function POST(request: Request) {
 }
 
 
-// Fetch squares from mock database based on ID range
-const fetchSquaresFromDatabase = async (start: number, end: number): Promise<Omit<SquareAPIData, 'owner'>[]> => {
-    return Object.values(mockDatabase)
-        .filter(square => square.id >= start && square.id <= end)
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        .map(({owner, ...square}) => square); // Exclude the owner property
-};
-
-// Save square data to "database"
-const saveSquareDataToDatabase = async (data: SquareAPIData) => {
-    // Simulate saving to the database
-    mockDatabase[data.id] = data;
-    return {message: 'Square data saved successfully'};
-};
-
-// Update square data with image URL
-// const updateSquareDataWithImageUrl = async (id: number, imageUrl: string): Promise<{ message: string }> => {
-//     // Check if the square exists in the database
-//     if (mockDatabase[id]) {
-//         // Update the imageUrl of the existing square
-//         mockDatabase[id].imageUrl = imageUrl;
-//         return { message: 'ImageUrl updated successfully' };
-//     } else {
-//         throw new Error('Square not found in the database');
-//     }
-// };
 

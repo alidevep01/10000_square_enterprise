@@ -1,7 +1,7 @@
 "use client";
 
 import React, {useState} from "react";
-import {SquareData} from "@/model/SquareData";
+import {SquareData} from "@/model/squareData";
 import PaymentModal from "@/app/components/PaymentModal";
 
 interface SquareProps {

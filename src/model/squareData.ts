@@ -14,3 +14,11 @@ export interface SquareAPIData {
     imageUrl: string;
     redirectLink: string;
 }
+
+// Example: Upload a file to the R2 bucket
+export interface S3params {
+    Bucket: string;
+    Key: string;
+    Body: Buffer;
+    ContentType: string;
+}

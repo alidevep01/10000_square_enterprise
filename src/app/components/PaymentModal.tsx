@@ -1,5 +1,5 @@
 import React, {useState} from "react";
-import {MAX_FILE_SIZE} from "@/constants/constants";
+import {MAX_FILE_SIZE} from "@/util/constants/constants";
 
 interface PaymentModalProps {
     squareId: number;
@@ -69,7 +69,6 @@ const PaymentModal: React.FC<PaymentModalProps> = ({squareId, onClose}) => {
                 id: squareId,  // Assuming squareId is the unique identifier
                 title,
                 imageUrl: reader.result, // Base64 image data
-                emailId,
                 redirectLink,
                 owner: emailId // Assuming the owner is the user who is purchasing the square
             };
