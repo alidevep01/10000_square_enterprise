@@ -1,41 +1,81 @@
-import React, {useState} from "react";
+import React, { useState } from "react";
 
 interface PaymentModalProps {
     squareId: number;
     onClose: () => void; // Callback to close the modal
 }
 
-const PaymentModal: React.FC<PaymentModalProps> = ({squareId, onClose}) => {
-    // State to hold user inputs for title, imageUrl, redirectLink, and email
+const PaymentModal: React.FC<PaymentModalProps> = ({ squareId, onClose }) => {
+    // State to hold user inputs for title, imageUrl, emailId, and redirectLink
     const [title, setTitle] = useState("");
-    const [imageUrl, setImageUrl] = useState("");
-    const [redirectLink, setRedirectLink] = useState("");
+    const [imageFile, setImageFile] = useState<File | null>(null);
     const [emailId, setEmailId] = useState("");
+    const [redirectLink, setRedirectLink] = useState("");
 
-    const [error, setError] = useState(""); // State to hold validation error message
+    // State to hold error messages
+    const [errorMessages, setErrorMessages] = useState<string[]>([]);
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+            setImageFile(e.target.files[0]); // Get the selected file
+            setErrorMessages([]); // Clear error messages when a new file is selected
+        }
+    };
+
+    const isValidEmail = (email: string) => {
+        const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // Basic email format regex
+        return regex.test(email);
+    };
+
+    const isValidUrl = (url: string) => {
+        const regex = /^(https?|chrome):\/\/[^\s$.?#].[^\s]*$/; // URL format regex
+        return regex.test(url);
+    };
 
     const handleSubmit = () => {
-        // Validate that all fields are filled
-        if (!title || !imageUrl || !redirectLink || !emailId) {
-            setError("All fields are mandatory!");
+        // Reset error messages
+        const errors: string[] = [];
+
+        // Check if all fields are filled
+        if (!title || !imageFile || !emailId || !redirectLink) {
+            errors.push("Please fill in all fields."); // Show error if any field is empty
+        }
+
+        // Check for email format
+        if (!isValidEmail(emailId)) {
+            errors.push("Please enter a valid email address."); // Show error for invalid email
+        }
+
+        // Check for URL format
+        if (!isValidUrl(redirectLink)) {
+            errors.push("Please enter a valid URL."); // Show error for invalid URL
+        }
+
+        // Check file size (4MB)
+        if (imageFile && imageFile.size > 4 * 1024 * 1024) {
+            errors.push("Image file size should not exceed 4MB."); // Show error for large files
+        }
+
+        if (errors.length > 0) {
+            setErrorMessages(errors); // Set error messages if there are any
             return;
         }
 
-        // You can handle the form submission here, e.g., send the data to a server or update the square
-        const squareData = {
-            squareId,
-            title,
-            imageUrl,
-            redirectLink,
-            emailId,
+        // Convert image file to base64 or upload it to a server/S3 here
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            const squareData = {
+                squareId,
+                title,
+                imageUrl: reader.result, // Base64 image data
+                emailId,
+                redirectLink,
+            };
+            console.log("Square Data Submitted: ", squareData);
+            // Close the modal after submitting the data
+            onClose();
         };
-        console.log("Square Data Submitted: ", squareData);
-
-        // Reset the error message
-        setError("");
-
-        // Close the modal after submitting the data
-        onClose();
+        reader.readAsDataURL(imageFile); // Convert to base64
     };
 
     return (
@@ -43,8 +83,6 @@ const PaymentModal: React.FC<PaymentModalProps> = ({squareId, onClose}) => {
             <h2>Purchase Square {squareId}</h2>
 
             <div style={formStyle}>
-                {error && <p style={errorStyle}>{error}</p>} {/* Display error if any */}
-
                 <label style={labelStyle}>
                     Title:
                     <input
@@ -52,18 +90,30 @@ const PaymentModal: React.FC<PaymentModalProps> = ({squareId, onClose}) => {
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                         style={inputStyle}
-                        required
+                        required // Mark as required
                     />
                 </label>
 
                 <label style={labelStyle}>
-                    Image URL:
+                    Upload Image:
                     <input
-                        type="text"
-                        value={imageUrl}
-                        onChange={(e) => setImageUrl(e.target.value)}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
                         style={inputStyle}
-                        required
+                        required // Mark as required
+                    />
+                    <p style={infoStyle}>Image size should not exceed 4MB.</p> {/* Info message */}
+                </label>
+
+                <label style={labelStyle}>
+                    Email ID:
+                    <input
+                        type="email"
+                        value={emailId}
+                        onChange={(e) => setEmailId(e.target.value)}
+                        style={inputStyle}
+                        required // Mark as required
                     />
                 </label>
 
@@ -74,20 +124,21 @@ const PaymentModal: React.FC<PaymentModalProps> = ({squareId, onClose}) => {
                         value={redirectLink}
                         onChange={(e) => setRedirectLink(e.target.value)}
                         style={inputStyle}
-                        required
+                        placeholder="e.g., https://google.com" // Sample placeholder
+                        required // Mark as required
                     />
                 </label>
 
-                <label style={labelStyle}>
-                    Email ID:
-                    <input
-                        type="email"
-                        value={emailId}
-                        onChange={(e) => setEmailId(e.target.value)}
-                        style={inputStyle}
-                        required
-                    />
-                </label>
+                {/* Display error messages */}
+                {errorMessages.length > 0 && (
+                    <div style={errorContainerStyle}>
+                        {errorMessages.map((error, index) => (
+                            <p key={index} style={errorStyle}>
+                                {error}
+                            </p>
+                        ))}
+                    </div>
+                )}
 
                 <div style={buttonContainerStyle}>
                     <button onClick={handleSubmit} style={buttonStyle}>
@@ -134,6 +185,11 @@ const inputStyle = {
     border: "1px solid #ccc",
 };
 
+const infoStyle = {
+    fontSize: "12px",
+    color: "gray",
+};
+
 const buttonContainerStyle = {
     display: "flex",
     justifyContent: "space-between" as const,
@@ -148,9 +204,15 @@ const buttonStyle = {
     cursor: "pointer",
 };
 
+// Styles for error messages
+const errorContainerStyle = {
+    marginTop: "10px",
+    marginBottom: "10px",
+};
+
 const errorStyle = {
     color: "red",
-    marginBottom: "10px",
+    fontSize: "14px",
 };
 
 export default PaymentModal;
