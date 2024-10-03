@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/squares/(.*)",
+      "destination": "https://images.10000mysterysquare.club/squares/$1"
+    }
+  ]
+}

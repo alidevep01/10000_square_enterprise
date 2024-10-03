@@ -1,5 +1,8 @@
 import {NextResponse} from 'next/server';
 import {PrismaClient} from '@prisma/client';
+import {S3params} from "@/model/squareData";
+import {CLOUD_FAIR_R2_BUCKET_NAME} from "@/util/constants/constants";
+import {uploadFileToS3} from "@/util/s3Client";
 // import {S3params} from "@/model/squareData";
 // import {CLOUD_FAIR_R2_BUCKET_NAME} from "@/util/constants/constants";
 
@@ -60,24 +63,25 @@ export async function POST(request: Request) {
         }
 
         // Prepare the image data for uploading
-        // const [metaData, base64Image] = imageUrl.split(','); // Split into metadata and base64
-        // const buffer = Buffer.from(base64Image, 'base64');
-        //
-        // // Extract the content type from the metadata
-        // const contentTypeMatch = metaData.match(/data:(.*?);base64/);
-        // const contentType = contentTypeMatch ? contentTypeMatch[1] : 'image/png'; // Default to png if not found
-        //
-        // const fileExtension = contentType.split('/')[1]; // Get the extension after the slash
-        //
-        // // Upload the image file to S3
-        // const s3Params: S3params = {
-        //     Bucket: CLOUD_FAIR_R2_BUCKET_NAME, // Replace with your bucket name
-        //     Key: `squares/${id}.png`, // Specify the file name and path
-        //     Body: buffer,
-        //     ContentType: contentType, // Adjust based on your image type
-        // };
+        const [metaData, base64Image] = imageUrl.split(','); // Split into metadata and base64
+        const buffer = Buffer.from(base64Image, 'base64');
 
-        // await uploadFileToS3(s3Params);
+        // Extract the content type from the metadata
+        const contentTypeMatch = metaData.match(/data:(.*?);base64/);
+        const contentType = contentTypeMatch ? contentTypeMatch[1] : 'image/png'; // Default to png if not found
+
+        const fileExtension = contentType.split('/')[1]; // Get the extension after the slash
+
+        const key = `squares/${id}.${fileExtension}`;
+        // Upload the image file to S3
+        const s3Params: S3params = {
+            Bucket: CLOUD_FAIR_R2_BUCKET_NAME, // Replace with your bucket name
+            Key: key, // Specify the file name and path
+            Body: buffer,
+            ContentType: contentType, // Adjust based on your image type
+        };
+
+        await uploadFileToS3(s3Params);
 
         // Save the square data to the "database"
         // Save the new square data using Prisma
@@ -86,7 +90,7 @@ export async function POST(request: Request) {
                 id,
                 title,
                 // imageUrl: `${CLOUD_FAIR_R2_BUCKET_URL}/squares/${id}.${fileExtension}`,
-                imageUrl: imageUrl,
+                imageUrl: `/${key}`,
                 redirectLink,
                 owner,
             },
