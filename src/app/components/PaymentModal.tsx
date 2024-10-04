@@ -101,7 +101,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({squareId, onClose}) => {
 
             {/* Modal Content */}
             <div className="relative bg-white p-6 shadow-lg z-50 w-80 rounded-lg">
-                <h2 className="text-lg font-bold mb-4">Purchase Square {squareId}</h2>
+                <h2 className="text-lg font-bold mb-4">Purchase Square #{squareId}</h2>
 
                 <div className="flex flex-col gap-4">
                     <label className="flex flex-col">
