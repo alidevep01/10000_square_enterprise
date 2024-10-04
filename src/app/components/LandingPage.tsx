@@ -21,7 +21,7 @@ export default function LandingPage() {
     const marginX = 15;
 
     return (
-        <div className="flex flex-col gap-20 w-screen overflow-x-hidden">
+        <div className="flex flex-col gap-20 w-screen relative z-10">
             <div className="mx-2">
                 <div className="mt-4 flex justify-between items-center">
                     <h1 className="font-bold text-3xl mb-1">Welcome to Mystery Square Club</h1>
@@ -36,8 +36,9 @@ export default function LandingPage() {
             </div>
 
             {/* Render the Grid with the specified count */}
-            <Grid count={winnerSquareCount} squareSize={winnerSquareSize} gap={winnerSquareGap} marginX={marginX}/>
-            <Grid count={squareCount} squareSize={squareSize} gap={gap} marginX={marginX}/>
+            <Grid count={winnerSquareCount} squareSize={winnerSquareSize} gap={winnerSquareGap} marginX={marginX}
+                  winnerSquare={true}/>
+            <Grid count={squareCount} squareSize={squareSize} gap={gap} marginX={marginX} winnerSquare={false}/>
 
             {/* Render the HowItWorks Modal */}
             <HowItWorksModal isOpen={isHTWModalOpen} onClose={closeHTWModal}/>

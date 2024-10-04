@@ -9,9 +9,10 @@ interface GridProps {
     squareSize: number;   // Size of each square
     gap: number;          // Gap between squares
     marginX: number;      // Margin on the X-axis (left and right margins)
+    winnerSquare: boolean;
 }
 
-export default function Grid({count, squareSize, gap, marginX}: GridProps) {
+export default function Grid({count, squareSize, gap, marginX, winnerSquare}: GridProps) {
     const [squares, setSquares] = useState<SquareData[]>([]);
 
     useEffect(() => {
@@ -55,7 +56,7 @@ export default function Grid({count, squareSize, gap, marginX}: GridProps) {
                 gap: `${gap}px`, // Set the gap between squares
             }}>
                 {squares.map((squareData) => (
-                    <Square key={squareData.id} data={squareData} squareSize={squareSize}/>
+                    <Square key={squareData.id} data={squareData} squareSize={squareSize} winnerSquare={winnerSquare}/>
                 ))}
             </div>
         </div>
@@ -64,9 +65,7 @@ export default function Grid({count, squareSize, gap, marginX}: GridProps) {
 
 // Style for the scrollable container
 const scrollContainerStyle: React.CSSProperties = {
-    overflowY: "auto",     // Enable vertical scroll
-    overflowX: "hidden",   // Disable horizontal scroll
-    width: "100%",         // Full-width container
+    width: "100vw",         // Full-width container
 };
 
 // Style for the grid
