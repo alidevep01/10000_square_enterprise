@@ -8,9 +8,10 @@ interface GridProps {
     count: number;        // Total number of squares
     squareSize: number;   // Size of each square
     gap: number;          // Gap between squares
+    marginX: number;      // Margin on the X-axis (left and right margins)
 }
 
-export default function Grid({count, squareSize, gap}: GridProps) {
+export default function Grid({count, squareSize, gap, marginX}: GridProps) {
     const [squares, setSquares] = useState<SquareData[]>([]);
 
     useEffect(() => {
@@ -43,21 +44,35 @@ export default function Grid({count, squareSize, gap}: GridProps) {
 
     return (
         <div style={{
-            ...gridStyle,
-            gridTemplateColumns: `repeat(auto-fill, ${squareSize}px)`,
-            gap: `${gap}px` // Set the gap between squares
+            ...scrollContainerStyle,
+            maxHeight: `100vh`, // Set the height of the scrollable grid container
+            marginLeft: `${marginX}px`, // Set left margin
+            marginRight: `${marginX}px`, // Set right margin
         }}>
-            {squares.map((squareData) => (
-                <Square key={squareData.id} data={squareData} squareSize={squareSize}/>
-            ))}
+            <div style={{
+                ...gridStyle,
+                gridTemplateColumns: `repeat(auto-fill, ${squareSize}px)`,
+                gap: `${gap}px`, // Set the gap between squares
+            }}>
+                {squares.map((squareData) => (
+                    <Square key={squareData.id} data={squareData} squareSize={squareSize}/>
+                ))}
+            </div>
         </div>
     );
 }
 
+// Style for the scrollable container
+const scrollContainerStyle: React.CSSProperties = {
+    overflowY: "auto",     // Enable vertical scroll
+    overflowX: "hidden",   // Disable horizontal scroll
+    width: "100%",         // Full-width container
+};
+
+// Style for the grid
 const gridStyle = {
     display: "grid",
     alignItems: "center",
-    width: "100vw",
-    padding: "0", // No padding
+    padding: "0",          // No padding
     boxSizing: "border-box" as const,
 };

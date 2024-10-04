@@ -7,236 +7,173 @@ interface PaymentModalProps {
 }
 
 const PaymentModal: React.FC<PaymentModalProps> = ({squareId, onClose}) => {
-    // State to hold user inputs for title, imageUrl, emailId, and redirectLink
     const [title, setTitle] = useState("");
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [emailId, setEmailId] = useState("");
     const [redirectLink, setRedirectLink] = useState("");
-
-    // State to hold error messages
     const [errorMessages, setErrorMessages] = useState<string[]>([]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
-            setImageFile(e.target.files[0]); // Get the selected file
-            setErrorMessages([]); // Clear error messages when a new file is selected
+            setImageFile(e.target.files[0]);
+            setErrorMessages([]);
         }
     };
 
     const isValidEmail = (email: string) => {
-        const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // Basic email format regex
+        const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return regex.test(email);
     };
 
     const isValidUrl = (url: string) => {
-        const regex = /^(https?|chrome):\/\/[^\s$.?#].[^\s]*$/; // URL format regex
+        const regex = /^(https?|chrome):\/\/[^\s$.?#].[^\s]*$/;
         return regex.test(url);
     };
 
     const handleSubmit = async () => {
-        // Reset error messages
         const errors: string[] = [];
 
-        // Check if all fields are filled
         if (!title || !imageFile || !emailId || !redirectLink) {
-            errors.push("Please fill in all fields."); // Show error if any field is empty
+            errors.push("Please fill in all fields.");
         }
 
-        // Check for email format
         if (!isValidEmail(emailId)) {
-            errors.push("Please enter a valid email address."); // Show error for invalid email
+            errors.push("Please enter a valid email address.");
         }
 
-        // Check for URL format
         if (!isValidUrl(redirectLink)) {
-            errors.push("Please enter a valid URL."); // Show error for invalid URL
+            errors.push("Please enter a valid URL.");
         }
 
-        // Check file size (4MB)
         if (imageFile && imageFile.size > MAX_FILE_SIZE) {
-            errors.push("Image file size should not exceed 4MB."); // Show error for large files
+            errors.push("Image file size should not exceed 4MB.");
         }
 
         if (errors.length > 0) {
-            setErrorMessages(errors); // Set error messages if there are any
+            setErrorMessages(errors);
             return;
         }
 
-        // Convert image file to base64 and send to the API
         const reader = new FileReader();
         reader.onloadend = async () => {
             const squareData = {
-                id: squareId,  // Assuming squareId is the unique identifier
+                id: squareId,
                 title,
-                imageUrl: reader.result, // Base64 image data
+                imageUrl: reader.result,
                 redirectLink,
-                owner: emailId // Assuming the owner is the user who is purchasing the square
+                owner: emailId,
             };
             console.log(squareData);
 
             try {
-                const response = await fetch('/api/squareDataHandler', {
-                    method: 'POST',
+                const response = await fetch("/api/squareDataHandler", {
+                    method: "POST",
                     headers: {
-                        'Content-Type': 'application/json',
+                        "Content-Type": "application/json",
                     },
-                    body: JSON.stringify(squareData), // Convert squareData to JSON
+                    body: JSON.stringify(squareData),
                 });
 
                 if (!response.ok) {
                     const errorData = await response.json();
-                    throw new Error(errorData.error || 'Failed to save square data');
+                    throw new Error(errorData.error || "Failed to save square data");
                 }
 
                 console.log("Square Data Submitted Successfully!");
-                onClose(); // Close the modal after successfully submitting
+                onClose();
             } catch (error) {
-                const errorMessage = error instanceof Error ? error.message : 'An error occurred while submitting square data.';
+                const errorMessage =
+                    error instanceof Error ? error.message : "An error occurred while submitting square data.";
                 console.log(errorMessage);
-                setErrorMessages([errorMessage]); // Set error messages if there's an error
+                setErrorMessages([errorMessage]);
             }
         };
+
         if (imageFile) {
-            reader.readAsDataURL(imageFile); // Convert to base64
+            reader.readAsDataURL(imageFile);
         }
     };
 
-
     return (
-        <div style={modalStyle}>
-            <h2>Purchase Square {squareId}</h2>
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+            {/* Overlay to dim the background */}
+            <div className="absolute inset-0 bg-black opacity-50"></div>
 
-            <div style={formStyle}>
-                <label style={labelStyle}>
-                    Title:
-                    <input
-                        type="text"
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        style={inputStyle}
-                        required // Mark as required
-                    />
-                </label>
+            {/* Modal Content */}
+            <div className="relative bg-white p-6 shadow-lg z-50 w-80 rounded-lg">
+                <h2 className="text-lg font-bold mb-4">Purchase Square {squareId}</h2>
 
-                <label style={labelStyle}>
-                    Upload Image:
-                    <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleFileChange}
-                        style={inputStyle}
-                        required // Mark as required
-                    />
-                    <p style={infoStyle}>Image size should not exceed 4MB.</p> {/* Info message */}
-                </label>
+                <div className="flex flex-col gap-4">
+                    <label className="flex flex-col">
+                        Title:
+                        <input
+                            type="text"
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            className="p-2 border rounded-md"
+                            required
+                        />
+                    </label>
 
-                <label style={labelStyle}>
-                    Email ID:
-                    <input
-                        type="email"
-                        value={emailId}
-                        onChange={(e) => setEmailId(e.target.value)}
-                        style={inputStyle}
-                        required // Mark as required
-                    />
-                </label>
+                    <label className="flex flex-col">
+                        Upload Image:
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleFileChange}
+                            className="p-2 border rounded-md"
+                            required
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Image size should not exceed 4MB.</p>
+                    </label>
 
-                <label style={labelStyle}>
-                    Redirect Link:
-                    <input
-                        type="text"
-                        value={redirectLink}
-                        onChange={(e) => setRedirectLink(e.target.value)}
-                        style={inputStyle}
-                        placeholder="e.g., https://google.com" // Sample placeholder
-                        required // Mark as required
-                    />
-                </label>
+                    <label className="flex flex-col">
+                        Email ID:
+                        <input
+                            type="email"
+                            value={emailId}
+                            onChange={(e) => setEmailId(e.target.value)}
+                            className="p-2 border rounded-md"
+                            required
+                        />
+                    </label>
 
-                {/* Display error messages */}
-                {errorMessages.length > 0 && (
-                    <div style={errorContainerStyle}>
-                        {errorMessages.map((error, index) => (
-                            <p key={index} style={errorStyle}>
-                                {error}
-                            </p>
-                        ))}
+                    <label className="flex flex-col">
+                        Redirect Link:
+                        <input
+                            type="text"
+                            value={redirectLink}
+                            onChange={(e) => setRedirectLink(e.target.value)}
+                            className="p-2 border rounded-md"
+                            placeholder="e.g., https://google.com"
+                            required
+                        />
+                    </label>
+
+                    {errorMessages.length > 0 && (
+                        <div className="mt-2 mb-2">
+                            {errorMessages.map((error, index) => (
+                                <p key={index} className="text-red-500 text-sm">
+                                    {error}
+                                </p>
+                            ))}
+                        </div>
+                    )}
+
+                    <div className="flex justify-between">
+                        <button onClick={handleSubmit}
+                                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300">
+                            Submit
+                        </button>
+                        <button onClick={onClose}
+                                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition duration-300">
+                            Cancel
+                        </button>
                     </div>
-                )}
-
-                <div style={buttonContainerStyle}>
-                    <button onClick={handleSubmit} style={buttonStyle}>
-                        Submit
-                    </button>
-                    <button onClick={onClose} style={buttonStyle}>
-                        Cancel
-                    </button>
                 </div>
             </div>
         </div>
     );
-};
-
-// Basic modal styling (you can adjust based on your needs)
-const modalStyle = {
-    position: "fixed" as const,
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50%, -50%)",
-    backgroundColor: "#fff",
-    padding: "20px",
-    boxShadow: "0px 0px 10px rgba(0,0,0,0.1)",
-    zIndex: 1000,
-    width: "300px",
-    borderRadius: "8px",
-};
-
-const formStyle = {
-    display: "flex",
-    flexDirection: "column" as const,
-    gap: "10px",
-};
-
-const labelStyle = {
-    display: "flex",
-    flexDirection: "column" as const,
-    marginBottom: "10px",
-};
-
-const inputStyle = {
-    padding: "8px",
-    borderRadius: "4px",
-    border: "1px solid #ccc",
-};
-
-const infoStyle = {
-    fontSize: "12px",
-    color: "gray",
-};
-
-const buttonContainerStyle = {
-    display: "flex",
-    justifyContent: "space-between" as const,
-};
-
-const buttonStyle = {
-    padding: "8px 16px",
-    borderRadius: "4px",
-    border: "none",
-    backgroundColor: "#007bff",
-    color: "#fff",
-    cursor: "pointer",
-};
-
-// Styles for error messages
-const errorContainerStyle = {
-    marginTop: "10px",
-    marginBottom: "10px",
-};
-
-const errorStyle = {
-    color: "red",
-    fontSize: "14px",
 };
 
 export default PaymentModal;

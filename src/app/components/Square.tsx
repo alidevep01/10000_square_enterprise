@@ -36,15 +36,8 @@ export default function Square({data, squareSize}: SquareProps) {
             {/* The square itself */}
             <div
                 onClick={handleSquareClick}
-                style={{
-                    width: `${squareSize}px`, // Set the square size
-                    height: `${squareSize}px`,
-                    // backgroundColor: data.isPurchased ? "transparent" : "grey",
-                    backgroundColor: "grey",
-                    position: "relative",
-                    overflow: "hidden", // Hide overflow
-                    cursor: "pointer",
-                }}
+                style={{width: `${squareSize}px`, height: `${squareSize}px`}}
+                className={`${data.isPurchased ? 'bg-white border-2 border-black' : 'bg-gray-300'} relative overflow-hidden cursor-pointer`}
             >
                 {data.isPurchased && (
                     <img
