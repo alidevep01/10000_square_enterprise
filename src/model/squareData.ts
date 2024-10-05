@@ -22,3 +22,9 @@ export interface S3params {
     Body: Buffer;
     ContentType: string;
 }
+
+export interface CheckoutCustomData {
+    squareId: number;
+    imageUrl?: string;
+    redirectLink?: string;
+}

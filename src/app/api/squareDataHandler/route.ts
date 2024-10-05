@@ -1,10 +1,9 @@
 import {NextResponse} from 'next/server';
 import {PrismaClient} from '@prisma/client';
-import {S3params} from "@/model/squareData";
+import {CheckoutCustomData, S3params} from "@/model/squareData";
 import {CLOUD_FAIR_R2_BUCKET_NAME} from "@/util/constants/constants";
 import {uploadFileToS3} from "@/util/s3Client";
-// import {S3params} from "@/model/squareData";
-// import {CLOUD_FAIR_R2_BUCKET_NAME} from "@/util/constants/constants";
+import {createPaymentLink} from "@/util/lemonSquizyClient";
 
 const prisma = new PrismaClient();
 
@@ -96,8 +95,17 @@ export async function POST(request: Request) {
             },
         });
 
+        const customCheckoutData: CheckoutCustomData = {
+            squareId: id,
+        }
+
+        const paymentLink = await createPaymentLink(customCheckoutData);
+        if(paymentLink == undefined) {
+            return NextResponse.json({error: 'Unable to fetch payment Link, please try again.'}, {status: 400});
+        }
+
         // Return a success response
-        return NextResponse.json({message: 'Square data submitted successfully'}, {status: 201});
+        return NextResponse.json({paymentLink: paymentLink}, {status: 201});
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'An error occurred while processing your request.';
         return NextResponse.json({error: errorMessage}, {status: 500});

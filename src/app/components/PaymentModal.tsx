@@ -1,9 +1,9 @@
-import React, {useState} from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {MAX_FILE_SIZE} from "@/util/constants/constants";
 
 interface PaymentModalProps {
     squareId: number;
-    onClose: () => void; // Callback to close the modal
+    onClose: () => void;
 }
 
 const PaymentModal: React.FC<PaymentModalProps> = ({squareId, onClose}) => {
@@ -12,6 +12,20 @@ const PaymentModal: React.FC<PaymentModalProps> = ({squareId, onClose}) => {
     const [emailId, setEmailId] = useState("");
     const [redirectLink, setRedirectLink] = useState("");
     const [errorMessages, setErrorMessages] = useState<string[]>([]);
+    const modalRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+                onClose();
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [onClose]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
@@ -73,10 +87,13 @@ const PaymentModal: React.FC<PaymentModalProps> = ({squareId, onClose}) => {
                     },
                     body: JSON.stringify(squareData),
                 });
+                const responseJson = await response.json();
 
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || "Failed to save square data");
+                if(response.ok) {
+                    window.open(responseJson.paymentLink, "_blank");
+                }
+                else {
+                    setErrorMessages(responseJson.error || "Failed to save square data");
                 }
 
                 console.log("Square Data Submitted Successfully!");
@@ -96,11 +113,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({squareId, onClose}) => {
 
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50">
-            {/* Overlay to dim the background */}
             <div className="absolute inset-0 bg-black opacity-50"></div>
 
-            {/* Modal Content */}
-            <div className="relative bg-white p-6 shadow-lg z-50 w-80 rounded-lg">
+            <div ref={modalRef} className="relative bg-white p-6 shadow-lg z-50 w-80 rounded-lg">
                 <h2 className="text-lg font-bold mb-4">Purchase Square #{squareId}</h2>
 
                 <div className="flex flex-col gap-4">
@@ -160,16 +175,12 @@ const PaymentModal: React.FC<PaymentModalProps> = ({squareId, onClose}) => {
                         </div>
                     )}
 
-                    <div className="flex justify-between">
-                        <button onClick={handleSubmit}
-                                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300">
-                            Submit
-                        </button>
-                        <button onClick={onClose}
-                                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition duration-300">
-                            Cancel
-                        </button>
-                    </div>
+                    <button
+                        onClick={handleSubmit}
+                        className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300"
+                    >
+                        Purchase for $12/year
+                    </button>
                 </div>
             </div>
         </div>
