@@ -20,5 +20,7 @@ model Square {
   imageUrl     String
   redirectLink String
   owner        String
+  isPurchased  Boolean  @default(false)
+  timestamp    DateTime @default(now())
 }
 

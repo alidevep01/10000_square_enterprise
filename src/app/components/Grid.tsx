@@ -28,7 +28,7 @@ export default function Grid({count, squareSize, gap, marginX, winnerSquare}: Gr
                     const existingSquare = squareMap.get(squareIndex);
                     return {
                         id: squareIndex, // Use 'squareIndex' to start from 1
-                        isPurchased: existingSquare ? true : false,
+                        isPurchased: existingSquare? existingSquare.isPurchased : false,
                         imageUrl: existingSquare ? existingSquare.imageUrl : "",
                         redirectLink: existingSquare ? existingSquare.redirectLink : "",
                         title: existingSquare ? existingSquare.title : `Square ${squareIndex}`,

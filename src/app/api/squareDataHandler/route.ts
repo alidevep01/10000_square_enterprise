@@ -33,6 +33,7 @@ export async function GET(request: Request) {
             title: true,
             imageUrl: true,
             redirectLink: true,
+            isPurchased: true
         },
     });
     // console.log(squares);
@@ -92,6 +93,7 @@ export async function POST(request: Request) {
                 imageUrl: `/${key}`,
                 redirectLink,
                 owner,
+                isPurchased: false
             },
         });
 
