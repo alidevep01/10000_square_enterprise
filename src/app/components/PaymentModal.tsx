@@ -91,13 +91,14 @@ const PaymentModal: React.FC<PaymentModalProps> = ({squareId, onClose}) => {
 
                 if(response.ok) {
                     window.open(responseJson.paymentLink, "_blank");
+                    onClose();
                 }
                 else {
-                    setErrorMessages(responseJson.error || "Failed to save square data");
+                    const errorMessage = responseJson.error || "Failed to save square data";
+                    setErrorMessages([errorMessage]);
                 }
 
                 console.log("Square Data Submitted Successfully!");
-                onClose();
             } catch (error) {
                 const errorMessage =
                     error instanceof Error ? error.message : "An error occurred while submitting square data.";

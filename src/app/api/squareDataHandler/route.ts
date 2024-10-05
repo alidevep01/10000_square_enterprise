@@ -58,8 +58,22 @@ export async function POST(request: Request) {
         });
 
         // Check if the square already exists
-        if (existingSquare) {
-            return NextResponse.json({error: 'Square is already purchased, please try another one!'}, {status: 400});
+        if(existingSquare) {
+            if (existingSquare.isPurchased) {
+                return NextResponse.json({error: 'Square is already purchased, please try another one.'}, {status: 400});
+            } else if(Date.now() - new Date(existingSquare.timestamp).getTime() < 10*60*1000){
+                // Buffer period for the owner to buy the square.
+                return NextResponse.json({error: 'Square is being purchased by another customer, please try another one.'},
+                    {status: 400});
+            }
+            else {
+                await prisma.square.delete(
+                    {
+                        where: {id}
+                    }
+                );
+                // delete from S3
+            }
         }
 
         // Prepare the image data for uploading
