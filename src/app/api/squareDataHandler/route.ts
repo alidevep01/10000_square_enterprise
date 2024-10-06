@@ -5,6 +5,7 @@ import {CLOUD_FAIR_R2_BUCKET_NAME} from "@/util/constants/constants";
 import {uploadFileToS3} from "@/util/s3Client";
 import {createPaymentLink} from "@/util/lemonSquizyClient";
 import {redisCacheManager} from "@/util/redisClient";
+import {compressImage} from "@/util/utils";
 
 // Fetch squares based on a range of IDs
 export async function GET(request: Request): Promise<NextResponse<SquareData[] | { error: string }>> {
@@ -103,11 +104,13 @@ export async function POST(request: Request) {
         const fileExtension = contentType.split('/')[1]; // Get the extension after the slash
 
         const key = `squares/${id}.${fileExtension}`;
+
+
         // Upload the image file to S3
         const s3Params: S3params = {
             Bucket: CLOUD_FAIR_R2_BUCKET_NAME, // Replace with your bucket name
             Key: key, // Specify the file name and path
-            Body: buffer,
+            Body: await compressImage(buffer, 1024*1024), // compress image to 1MB before uploading
             ContentType: contentType, // Adjust based on your image type
         };
 
