@@ -125,7 +125,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({squareId, onClose}) => {
         <div className="fixed inset-0 flex items-center justify-center z-50">
             <div className="absolute inset-0 bg-black opacity-50"></div>
 
-            <div ref={modalRef} className="relative bg-white p-6 shadow-lg z-50 w-80 rounded-lg">
+            <div ref={modalRef} className="text-black relative bg-white p-6 shadow-lg z-50 w-80 rounded-lg">
                 <h2 className="text-lg font-bold mb-4">Purchase Square #{squareId}</h2>
 
                 <div className="flex flex-col gap-4">
