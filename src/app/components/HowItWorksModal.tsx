@@ -35,8 +35,7 @@ export default function HowItWorksModal({isOpen, onClose}: RulesModalProps) {
                         squares.
                         (The first 20 bigger squares you see on the page.) <br/>
                         - <strong>The owner of the chosen square wins $1000!</strong> We will reach out via email and
-                        pay
-                        you. <br/>
+                        pay you. <br/>
                     </div>
                 </p>
                 <div className="flex justify-center">

@@ -1,6 +1,5 @@
 "use client"; // Mark this component as a client component
 
-import React, {useEffect, useState} from "react";
 import Square from "@/app/components/Square";
 import {SquareData} from "@/model/squareData";
 
@@ -10,38 +9,10 @@ interface GridProps {
     gap: number;          // Gap between squares
     marginX: number;      // Margin on the X-axis (left and right margins)
     winnerSquare: boolean;
+    squareDataList: SquareData[];
 }
 
-export default function Grid({count, squareSize, gap, marginX, winnerSquare}: GridProps) {
-    const [squares, setSquares] = useState<SquareData[]>([]);
-
-    useEffect(() => {
-        const fetchSquares = async () => {
-            const response = await fetch(`/api/squareDataHandler?start=1&end=${count}`); // Adjust the API URL as necessary
-            if (response.ok) {
-                const data: SquareData[] = await response.json();
-                const squareMap = new Map(data.map(square => [square.id, square]));
-
-                // Create the full array of squares with default values
-                const fullSquares: SquareData[] = Array.from({length: count}, (_, index) => {
-                    const squareIndex = index + 1; // Ensure that indexing starts from 1 to 'count'
-                    const existingSquare = squareMap.get(squareIndex);
-                    return {
-                        id: squareIndex, // Use 'squareIndex' to start from 1
-                        isPurchased: existingSquare? existingSquare.isPurchased : false,
-                        imageUrl: existingSquare ? existingSquare.imageUrl : "",
-                        redirectLink: existingSquare ? existingSquare.redirectLink : "",
-                        title: existingSquare ? existingSquare.title : `Square ${squareIndex}`,
-                    };
-                });
-                console.log(fullSquares);
-
-                setSquares(fullSquares);
-            }
-        };
-
-        fetchSquares();
-    }, [count]);
+export default function Grid({squareSize, gap, marginX, winnerSquare, squareDataList}: GridProps) {
 
     return (
         <div style={{
@@ -53,9 +24,9 @@ export default function Grid({count, squareSize, gap, marginX, winnerSquare}: Gr
             <div style={{
                 ...gridStyle,
                 gridTemplateColumns: `repeat(auto-fill, ${squareSize}px)`,
-                gap: `${gap}px`, // Set the gap between squares
+                gap: `${gap}px`, // Set the gap between squareData
             }}>
-                {squares.map((squareData) => (
+                {squareDataList.map((squareData) => (
                     <Square key={squareData.id} data={squareData} squareSize={squareSize} winnerSquare={winnerSquare}/>
                 ))}
             </div>

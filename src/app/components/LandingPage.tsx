@@ -1,11 +1,14 @@
 "use client";
 
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import Grid from "@/app/components/Grid";
 import HowItWorksModal from "@/app/components/HowItWorksModal";
+import {SquareData} from "@/model/squareData";
 
 export default function LandingPage() {
     const [isHTWModalOpen, setIsHTWModalOpen] = useState(false);
+    const [squares, setSquares] = useState<SquareData[]>([]);
+    const [winnerSquares, setWinnerSquares] = useState<SquareData[]>([]);
 
     const openHTWModal = () => setIsHTWModalOpen(true);
     const closeHTWModal = () => setIsHTWModalOpen(false);
@@ -19,6 +22,55 @@ export default function LandingPage() {
     const winnerSquareGap = 3;
 
     const marginX = 15;
+
+    useEffect(() => {
+        const fetchSquares = async () => {
+            const response = await fetch(`/api/squareDataHandler?start=1&end=${squareCount}`);
+            if (response.ok) {
+                const data: SquareData[] = await response.json();
+                const squareMap = new Map(data.map(square => [square.id, square]));
+
+                const fullSquares: SquareData[] = Array.from({length: squareCount}, (_, index) => {
+                    const squareIndex = index + 1; // Ensure that indexing starts from 1 to 'count'
+                    const existingSquare = squareMap.get(squareIndex);
+                    return {
+                        id: squareIndex, // Use 'squareIndex' to start from 1
+                        isPurchased: existingSquare ? existingSquare.isPurchased : false,
+                        imageUrl: existingSquare ? existingSquare.imageUrl : "",
+                        redirectLink: existingSquare ? existingSquare.redirectLink : "",
+                        title: existingSquare ? existingSquare.title : `Square ${squareIndex}`,
+                    };
+                });
+                setSquares(fullSquares);
+            }
+        };
+        fetchSquares();
+    },[squareCount]);
+
+    useEffect(() => {
+        const fetchWinnerSquares = async () => {
+            const response = await fetch(`/api/winnerSquareHandler`);
+            if (response.ok) {
+                const data: SquareData[] = await response.json();
+
+
+                const unfilledWinnerSquares: SquareData[] = Array.from({length: winnerSquareCount - data.length}, (_, index) => {
+                    const squareIndex = index + 1;
+                    return {
+                        id: squareIndex,
+                        isPurchased: false,
+                        imageUrl: "",
+                        redirectLink: "",
+                        title: `Square ${squareIndex}`,
+                    };
+                });
+                setWinnerSquares([...data, ...unfilledWinnerSquares]);
+
+            }
+        };
+        fetchWinnerSquares();
+    },[winnerSquareCount]);
+
 
     return (
         <div className="flex flex-col gap-20 w-screen relative z-10">
@@ -37,8 +89,9 @@ export default function LandingPage() {
 
             {/* Render the Grid with the specified count */}
             <Grid count={winnerSquareCount} squareSize={winnerSquareSize} gap={winnerSquareGap} marginX={marginX}
-                  winnerSquare={true}/>
-            <Grid count={squareCount} squareSize={squareSize} gap={gap} marginX={marginX} winnerSquare={false}/>
+                  winnerSquare={true} squareDataList={winnerSquares}/>
+            <Grid count={squareCount} squareSize={squareSize} gap={gap} marginX={marginX}
+                  winnerSquare={false} squareDataList={squares}/>
 
             {/* Render the HowItWorks Modal */}
             <HowItWorksModal isOpen={isHTWModalOpen} onClose={closeHTWModal}/>

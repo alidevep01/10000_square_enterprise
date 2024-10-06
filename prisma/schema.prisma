@@ -15,12 +15,18 @@ datasource db {
 }
 
 model Square {
-  id           Int      @id
+  id           Int           @id
   title        String
   imageUrl     String
   redirectLink String
   owner        String
-  isPurchased  Boolean  @default(false)
-  timestamp    DateTime @default(now())
+  isPurchased  Boolean       @default(false)
+  timestamp    DateTime      @default(now())
+  WinnerSquare WinnerSquare?
 }
 
+model WinnerSquare {
+  id       Int    @id
+  squareId Int    @unique
+  square   Square @relation(fields: [squareId], references: [id]) // Foreign key relation
+}

@@ -1,6 +1,6 @@
 import {NextResponse} from 'next/server';
 import {PrismaClient} from '@prisma/client';
-import {CheckoutCustomData, S3params} from "@/model/squareData";
+import {CheckoutCustomData, S3params, SquareData} from "@/model/squareData";
 import {CLOUD_FAIR_R2_BUCKET_NAME} from "@/util/constants/constants";
 import {uploadFileToS3} from "@/util/s3Client";
 import {createPaymentLink} from "@/util/lemonSquizyClient";
@@ -8,7 +8,7 @@ import {createPaymentLink} from "@/util/lemonSquizyClient";
 const prisma = new PrismaClient();
 
 // Fetch squares based on a range of IDs
-export async function GET(request: Request) {
+export async function GET(request: Request) : Promise<NextResponse<SquareData[] | { error: string}>> {
     const {searchParams} = new URL(request.url);
     const startParam = searchParams.get('start');
     const endParam = searchParams.get('end');
