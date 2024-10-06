@@ -4,6 +4,7 @@ import {CheckoutCustomData, S3params, SquareData} from "@/model/squareData";
 import {CLOUD_FAIR_R2_BUCKET_NAME} from "@/util/constants/constants";
 import {uploadFileToS3} from "@/util/s3Client";
 import {createPaymentLink} from "@/util/lemonSquizyClient";
+import {redisCacheManager} from "@/util/redisClient";
 
 // Fetch squares based on a range of IDs
 export async function GET(request: Request) : Promise<NextResponse<SquareData[] | { error: string}>> {
@@ -18,6 +19,18 @@ export async function GET(request: Request) : Promise<NextResponse<SquareData[] 
 
     const start = parseInt(startParam, 10);
     const end = parseInt(endParam, 10);
+
+    // Redis cache key
+    const cacheKey = `squares:${start}-${end}`;
+
+    // Try to get from cache
+    const cachedData = await redisCacheManager.get(cacheKey);
+    if (cachedData) {
+        console.log("Data found in redis.");
+        return NextResponse.json(JSON.parse(cachedData));
+    }
+    console.log("No data found in redis, falling back to calling DB.");
+
 
     const squares = await prisma.square.findMany({
         where: {
@@ -34,6 +47,11 @@ export async function GET(request: Request) : Promise<NextResponse<SquareData[] 
             isPurchased: true
         },
     });
+
+    // Cache the new data
+    redisCacheManager.set(cacheKey, JSON.stringify(squares), 10)
+        .catch(error => console.error('Error caching data:', error));
+
     // console.log(squares);
     return NextResponse.json(squares);
 }
