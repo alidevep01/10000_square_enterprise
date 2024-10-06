@@ -7,7 +7,7 @@ import {createPaymentLink} from "@/util/lemonSquizyClient";
 import {redisCacheManager} from "@/util/redisClient";
 
 // Fetch squares based on a range of IDs
-export async function GET(request: Request) : Promise<NextResponse<SquareData[] | { error: string}>> {
+export async function GET(request: Request): Promise<NextResponse<SquareData[] | { error: string }>> {
     const {searchParams} = new URL(request.url);
     const startParam = searchParams.get('start');
     const endParam = searchParams.get('end');
@@ -74,16 +74,15 @@ export async function POST(request: Request) {
         });
 
         // Check if the square already exists
-        const paymentCutOffTime = 10*60*1000;
-        if(existingSquare) {
+        const paymentCutOffTime = 10 * 60 * 1000;
+        if (existingSquare) {
             if (existingSquare.isPurchased) {
                 return NextResponse.json({error: 'Square is already purchased, please try another one.'}, {status: 400});
-            } else if(Date.now() - new Date(existingSquare.timestamp).getTime() < paymentCutOffTime){
+            } else if (Date.now() - new Date(existingSquare.timestamp).getTime() < paymentCutOffTime) {
                 // Buffer period for the owner to buy the square.
                 return NextResponse.json({error: 'Square is being purchased by another customer, please try another one.'},
                     {status: 400});
-            }
-            else {
+            } else {
                 await prisma.square.delete(
                     {
                         where: {id}
@@ -92,12 +91,6 @@ export async function POST(request: Request) {
                 // no need to delete from S3 since the image gets replaced
             }
         }
-
-        const customCheckoutData: CheckoutCustomData = {
-            squareId: id,
-        }
-
-        const paymentLinkPromise = createPaymentLink(customCheckoutData);
 
         // Prepare the image data for uploading
         const [metaData, base64Image] = imageUrl.split(','); // Split into metadata and base64
@@ -118,26 +111,29 @@ export async function POST(request: Request) {
             ContentType: contentType, // Adjust based on your image type
         };
 
-        await uploadFileToS3(s3Params);
+        const customCheckoutData: CheckoutCustomData = {
+            squareId: id,
+        }
 
-        // Save the square data to the "database"
-        // Save the new square data using Prisma
-        await prisma.square.create({
-            data: {
-                id,
-                title,
-                // imageUrl: `${CLOUD_FAIR_R2_BUCKET_URL}/squares/${id}.${fileExtension}`,
-                imageUrl: `/${key}`,
-                redirectLink,
-                owner,
-                isPurchased: false,
-                timestamp: new Date().toISOString()
-            },
-        });
+        // Run payment link creation and image upload in parallel
+        const [paymentLink] = await Promise.all([
+            createPaymentLink(customCheckoutData), // Creating payment link
+            uploadFileToS3(s3Params), // Uploading image to S3
+            prisma.square.create({ // Creating entry in DB
+                data: {
+                    id,
+                    title,
+                    // imageUrl: `${CLOUD_FAIR_R2_BUCKET_URL}/squares/${id}.${fileExtension}`,
+                    imageUrl: `/${key}`,
+                    redirectLink,
+                    owner,
+                    isPurchased: false,
+                    timestamp: new Date().toISOString()
+                },
+            })
+        ]);
 
-        const paymentLink = await paymentLinkPromise;
-
-        if(paymentLink == undefined) {
+        if (paymentLink == undefined) {
             return NextResponse.json({error: 'Unable to fetch payment Link, please try again.'}, {status: 400});
         }
 
