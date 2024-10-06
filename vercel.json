@@ -1,4 +1,10 @@
 {
+  "cons": [
+    {
+      "path": "/api/winnerSquareUpdateJob",
+      "schedule": "*/10 * * * *"
+    }
+  ],
   "rewrites": [
     {
       "source": "/squares/(.*)",

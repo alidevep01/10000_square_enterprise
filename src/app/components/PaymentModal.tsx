@@ -13,10 +13,14 @@ const PaymentModal: React.FC<PaymentModalProps> = ({squareId, onClose}) => {
     const [redirectLink, setRedirectLink] = useState("");
     const [errorMessages, setErrorMessages] = useState<string[]>([]);
     const modalRef = useRef<HTMLDivElement>(null);
+    const [isLoading, setIsLoading] = useState(false);
+
+
 
     useEffect(() => {
+        if(isLoading) return ;
         const handleClickOutside = (event: MouseEvent) => {
-            if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+            if (modalRef.current && !modalRef.current.contains(event.target as Node) && !isLoading) {
                 onClose();
             }
         };
@@ -25,7 +29,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({squareId, onClose}) => {
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
-    }, [onClose]);
+    }, [isLoading, onClose]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
@@ -68,6 +72,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({squareId, onClose}) => {
             return;
         }
 
+        setIsLoading(true);
+
         const reader = new FileReader();
         reader.onloadend = async () => {
             const squareData = {
@@ -105,6 +111,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({squareId, onClose}) => {
                 console.log(errorMessage);
                 setErrorMessages([errorMessage]);
             }
+            finally {
+                setIsLoading(false);
+            }
         };
 
         if (imageFile) {
@@ -127,6 +136,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({squareId, onClose}) => {
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                             className="p-2 border rounded-md"
+                            disabled={isLoading}
                             required
                         />
                     </label>
@@ -138,6 +148,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({squareId, onClose}) => {
                             accept="image/*"
                             onChange={handleFileChange}
                             className="p-2 border rounded-md"
+                            disabled={isLoading}
                             required
                         />
                         <p className="text-xs text-gray-500 mt-1">Image size should not exceed 4MB.</p>
@@ -150,6 +161,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({squareId, onClose}) => {
                             value={emailId}
                             onChange={(e) => setEmailId(e.target.value)}
                             className="p-2 border rounded-md"
+                            disabled={isLoading}
                             required
                         />
                     </label>
@@ -162,6 +174,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({squareId, onClose}) => {
                             onChange={(e) => setRedirectLink(e.target.value)}
                             className="p-2 border rounded-md"
                             placeholder="e.g., https://google.com"
+                            disabled={isLoading}
                             required
                         />
                     </label>
@@ -178,9 +191,18 @@ const PaymentModal: React.FC<PaymentModalProps> = ({squareId, onClose}) => {
 
                     <button
                         onClick={handleSubmit}
-                        className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300"
+                        disabled={isLoading}
+                        className={`w-full px-4 py-2 bg-blue-500 text-white rounded transition duration-300 flex items-center justify-center
+                            ${isLoading ? 'bg-blue-400 cursor-not-allowed' : 'hover:bg-blue-600'}`}
                     >
-                        Purchase for $12/year
+                        {isLoading ? (
+                            <>
+                                <div className="animate-spin mr-2 h-5 w-5"/>
+                                Please Wait...
+                            </>
+                        ) : (
+                            'Purchase for $12/year'
+                        )}
                     </button>
                 </div>
             </div>

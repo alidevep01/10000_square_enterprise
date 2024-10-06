@@ -58,10 +58,11 @@ export async function POST(request: Request) {
         });
 
         // Check if the square already exists
+        const paymentCutOffTime = 10*60*1000;
         if(existingSquare) {
             if (existingSquare.isPurchased) {
                 return NextResponse.json({error: 'Square is already purchased, please try another one.'}, {status: 400});
-            } else if(Date.now() - new Date(existingSquare.timestamp).getTime() < 10*60*1000){
+            } else if(Date.now() - new Date(existingSquare.timestamp).getTime() < paymentCutOffTime){
                 // Buffer period for the owner to buy the square.
                 return NextResponse.json({error: 'Square is being purchased by another customer, please try another one.'},
                     {status: 400});
@@ -72,9 +73,15 @@ export async function POST(request: Request) {
                         where: {id}
                     }
                 );
-                // delete from S3
+                // no need to delete from S3 since the image gets replaced
             }
         }
+
+        const customCheckoutData: CheckoutCustomData = {
+            squareId: id,
+        }
+
+        const paymentLinkPromise = createPaymentLink(customCheckoutData);
 
         // Prepare the image data for uploading
         const [metaData, base64Image] = imageUrl.split(','); // Split into metadata and base64
@@ -107,15 +114,13 @@ export async function POST(request: Request) {
                 imageUrl: `/${key}`,
                 redirectLink,
                 owner,
-                isPurchased: false
+                isPurchased: false,
+                timestamp: new Date().toISOString()
             },
         });
 
-        const customCheckoutData: CheckoutCustomData = {
-            squareId: id,
-        }
+        const paymentLink = await paymentLinkPromise;
 
-        const paymentLink = await createPaymentLink(customCheckoutData);
         if(paymentLink == undefined) {
             return NextResponse.json({error: 'Unable to fetch payment Link, please try again.'}, {status: 400});
         }
@@ -123,7 +128,8 @@ export async function POST(request: Request) {
         // Return a success response
         return NextResponse.json({paymentLink: paymentLink}, {status: 201});
     } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'An error occurred while processing your request.';
+        const errorMessage = 'An error occurred while processing your request, please try again.';
+        console.log(error instanceof Error ? error.message : "");
         return NextResponse.json({error: errorMessage}, {status: 500});
     }
 }

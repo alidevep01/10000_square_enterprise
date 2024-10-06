@@ -93,7 +93,8 @@ export async function POST(request: Request) {
                 id: squareId
             },
             data: {
-                isPurchased: true
+                isPurchased: true,
+                timestamp: new Date().toISOString()
             }
         });
 
