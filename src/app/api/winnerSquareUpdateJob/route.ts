@@ -1,7 +1,6 @@
 import {NextRequest, NextResponse} from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import {prisma} from "@/util/prisma";
 
-const prisma = new PrismaClient();
 
 // Fetch winner squares
 export async function GET(request : NextRequest) {

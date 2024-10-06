@@ -1,8 +1,8 @@
-import { PrismaClient } from '@prisma/client';
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
+import {prisma} from "@/util/prisma";
 
-const prisma = new PrismaClient();
+
 
 interface LemonSqueezyWebhookPayload {
     meta: {

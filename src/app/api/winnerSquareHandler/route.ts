@@ -1,8 +1,6 @@
 import {NextResponse} from 'next/server';
-import {PrismaClient} from '@prisma/client';
+import {prisma} from "@/util/prisma";
 import {SquareData} from "@/model/squareData";
-
-const prisma = new PrismaClient();
 
 // Fetch winner squares
 export async function GET() : Promise<NextResponse<SquareData[] | { error: string}>> {
